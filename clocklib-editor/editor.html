@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+    <body style="background-color: black">
+
+    <object id="svg" data="leds.svg" type="image/svg+xml" width="800dp"></object>
+    <button id="clear_button">Clear</button>
+    <script>
+
+        let onStyle = "fill:rgb(255,228,6);stroke:black;stroke-width:0.35px;";
+        let offStyle = "fill:rgb(20,20,20);stroke:black;stroke-width:0.35px;"
+
+        setTimeout(function () {
+            let svg = document.getElementById('svg').contentDocument;
+
+            let clearButton = document.getElementById('clear_button');
+            clearButton.onclick = function () {
+                for (let part = 1; part <= 2; part++) {
+                    for (let s = 1; s <= 44; s++) {
+                        let id = "s" + part + "-" + s;
+                        let segment = svg.getElementById(id);
+                        segment = segment.children[0];
+                        segment.setAttributeNS(null, 'style', offStyle);
+                        segment.setAttributeNS(null, 'onoff', "off");
+                    }
+                }
+            };
+
+
+            for (let part = 1; part <= 2; part++) {
+                for (let s = 1; s <= 44; s++) {
+                    let id = "s" + part + "-" + s;
+                    let segment = svg.getElementById(id);
+                    segment = segment.children[0];
+                    segment.setAttributeNS(null, 'style', offStyle);
+                    segment.setAttributeNS(null, 'onoff', "off");
+
+                    segment.onclick = function () {
+                        let state = segment.getAttributeNS(null, 'onoff');
+                        if(state == "off") {
+                            segment.setAttributeNS(null, 'style', onStyle);
+                            segment.setAttributeNS(null, 'onoff', "on");
+                        } else {
+                            segment.setAttributeNS(null, 'style', offStyle);
+                            segment.setAttributeNS(null, 'onoff', "off");
+                        }
+
+                        console.log("Clicked: " + id);
+                        printValue();
+                    };
+                }
+            }
+
+            function printValue() {
+
+                for (let part = 1; part <= 2; part++) {
+
+                    let bytes = [0,0,0,0,0,0];
+
+                    for (let s = 0; s <= 43; s++) {
+                        let id = "s" + part + "-" + (s+1);
+                        let segment = svg.getElementById(id);
+                        segment = segment.children[0];
+
+                        let state = segment.getAttributeNS(null, 'onoff') == 'on';
+                        if(state) {
+                            let byte = Math.floor(s / 8);
+                            bytes[byte] += (1 << (s % 8));
+                        }
+                    }
+
+                    console.log("[" + bytes.map((item) => { return "0x" + item.toString(16) }).join(", ") + "]");
+                }
+            }
+
+        }, 100);
+    </script>
+
+    </body>
+</html>
+
