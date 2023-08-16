@@ -202,6 +202,11 @@ async fn on_event(event: Event, rtc: &'static StaticRtc) {
 async fn advance_time(position: u8, rtc: &'static StaticRtc) {
     let mut rtc = rtc.lock().await;
     let mut current = rtc.get_datetime().unwrap();
+    let defaut = default_datetime();
+
+    current.month = defaut.month;
+    current.weekday = defaut.weekday;
+    current.year = defaut.year;
 
     info!("Advancing time");
 
