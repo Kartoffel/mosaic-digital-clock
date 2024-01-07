@@ -127,6 +127,15 @@ const PROGRESS_LTR: [Symbol; 6] = [
     },
 ];
 
+const CH_LTR: [Symbol; 2] = [
+    Symbol {
+        mask: [0x2f, 0x9, 0x21, 0x21, 0x48, 0xf],
+    },
+    Symbol {
+        mask: [0x29, 0x49, 0x6f, 0x2f, 0x49, 0x9],
+    },
+];
+
 impl<I2C, E> ClockDisplay<I2C>
 where
     E: Debug,
@@ -176,6 +185,29 @@ where
         assert!(sub_display < 4);
 
         let symbol = &DIGITS[symbol_id];
+        let bits = symbol.mask.view_bits::<Lsb0>();
+        for (i, bit) in bits.iter().enumerate() {
+            if i < SEGMENTS.len() {
+                if bit == true {
+                    self.draw_segment(sub_display, i, color)?;
+                } else {
+                    self.draw_segment(sub_display, i, 0x00)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+    
+    pub fn draw_CH(
+        &mut self,
+        sub_display: u8,
+        symbol_id: usize,
+        color: u8,
+    ) -> Result<(), Error<E>> {
+        assert!(sub_display < 4);
+
+        let symbol = &CH_LTR[symbol_id];
         let bits = symbol.mask.view_bits::<Lsb0>();
         for (i, bit) in bits.iter().enumerate() {
             if i < SEGMENTS.len() {

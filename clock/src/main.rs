@@ -380,7 +380,7 @@ static CURRENT_TIME: Mutex<ThreadModeRawMutex, DateTime> = Mutex::new(default_da
 
 const MAX_BRIGHTNESS_LEVEL: usize = 6;
 const BRIGHTNESS_MAP: [u8; MAX_BRIGHTNESS_LEVEL] = [0x05, 0x10, 0x20, 0x40, 0x60, 0x90];
-static CURRENT_BRIGHTNESS: Mutex<ThreadModeRawMutex, usize> = Mutex::new(3); // 0 - 6
+static CURRENT_BRIGHTNESS: Mutex<ThreadModeRawMutex, usize> = Mutex::new(4); // 0 - 6
 
 static EVENT_CHANNEL: Channel<ThreadModeRawMutex, Event, 10> = Channel::new();
 static SCREEN_REFRESH_SIGNAL: Signal<ThreadModeRawMutex, ScreenRefresh> = Signal::new();
@@ -402,6 +402,12 @@ async fn main(spawner: Spawner) {
     let leds2 = IS31FL3731::new(shared_i2c.acquire_i2c(), 0x74);
     let mut clock = ClockDisplay::new([Some(leds1), Some(leds2), None]);
     clock.setup().unwrap();
+    
+    clock.draw_CH(0, 0, 0x70).unwrap();
+    clock.draw_CH(1, 1, 0x70).unwrap();
+    clock.draw_symbol(2, 2, 0x70).unwrap();
+    clock.draw_symbol(3, 3, 0x70).unwrap();
+    
 
     let mut rtc = PCF8563::new(shared_i2c.acquire_i2c());
     rtc.rtc_init().unwrap();
@@ -411,8 +417,15 @@ async fn main(spawner: Spawner) {
 
     unwrap!(spawner.spawn(sync_time(rtc)));
     unwrap!(spawner.spawn(run_time()));
-    Timer::after(Duration::from_millis(10)).await;
+    Timer::after(Duration::from_millis(5000)).await;
+    
+    /*for i in 0..=4 {
+        clock.draw_symbol(i, (i+1).into(), 0x70).unwrap();
+    }
+    Timer::after(Duration::from_millis(10)).await;*/
+    
     unwrap!(spawner.spawn(screen_update(clock)));
+    //unwrap!(spawner.spawn(led_numbers_test(clock)));
 
     unwrap!(spawner.spawn(button1_task(p.PIN_2.degrade())));
     unwrap!(spawner.spawn(button2_task(p.PIN_3.degrade())));
